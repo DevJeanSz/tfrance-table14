@@ -1,0 +1,73 @@
+<div class="table-wrapper">
+  <div class="d-flex justify-content-between mb-2">
+    <input
+      type="text"
+      class="form-control"
+      placeholder="Buscar..."
+      [(ngModel)]="searchTerm"
+    />
+    <button class="btn btn-outline-primary" (click)="exportToExcel()">
+      Exportar Excel
+    </button>
+  </div>
+
+  <table class="table table-bordered table-hover">
+    <thead>
+      <tr>
+        <th *ngIf="enableCheckbox">
+          <input
+            type="checkbox"
+            (change)="selectedItems.clear(); itemSelected.emit([])"
+          />
+        </th>
+        <th *ngFor="let col of columns" (click)="sortBy(col.field)" style="cursor:pointer">
+          {{ col.label }}
+          <i
+            *ngIf="col.sortable"
+            [class]="
+              sortField === col.field
+                ? sortAsc
+                  ? 'feather icon-arrow-down'
+                  : 'feather icon-arrow-up'
+                : ''
+            "
+          ></i>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let item of paginatedData">
+        <td *ngIf="enableCheckbox">
+          <input
+            type="checkbox"
+            [checked]="selectedItems.has(item)"
+            (change)="toggleItem(item)"
+          />
+        </td>
+        <td *ngFor="let col of columns">{{ item[col.field] }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="pagination d-flex justify-content-between align-items-center">
+    <span>
+      Página {{ currentPage }} de {{ totalPages }}
+    </span>
+    <div>
+      <button
+        class="btn btn-sm btn-outline-primary"
+        [disabled]="currentPage === 1"
+        (click)="goToPreviousPage()"
+      >
+        &lt;
+      </button>
+      <button
+        class="btn btn-sm btn-outline-primary"
+        [disabled]="currentPage === totalPages"
+        (click)="goToNextPage()"
+      >
+        &gt;
+      </button>
+    </div>
+  </div>
+</div>

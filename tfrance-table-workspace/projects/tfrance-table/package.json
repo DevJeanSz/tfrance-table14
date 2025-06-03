@@ -1,0 +1,14 @@
+{
+  "name": "tfrance-table14",
+  "version": "0.0.1",
+  "peerDependencies": {
+    "@angular/common": "^14.2.0",
+    "@angular/core": "^14.2.0"
+  },
+  "dependencies": {
+    "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
+    "file-saver": "^2.0.5"
+
+  }
+}
