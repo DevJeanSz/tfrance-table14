@@ -82,7 +82,7 @@ The “Export Excel” button exports filtered data to .xlsx format.
 ## 📦 Instalação | Installation
 
 ```bash
-npm install tfrance-table
+npm install tfrance-table14
 
 ## 📄 Licença | License
 ## MIT © Jean Lima
