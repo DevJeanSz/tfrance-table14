@@ -1,6 +1,16 @@
 {
   "name": "tfrance-table14",
   "version": "0.0.1",
+  "author": {
+    "name": "Jean Lima",
+    "email": "limajean1703@gmail.com",
+    "url": "https://www.linkedin.com/in/jean-lima-636937244/"
+  },
+  "homepage": "https://github.com/DevJeanSz/tfrance-table14",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DevJeanSz/tfrance-table14.git"
+  },
   "peerDependencies": {
     "@angular/common": "^14.2.0",
     "@angular/core": "^14.2.0"
@@ -9,6 +19,5 @@
     "tslib": "^2.3.0",
     "xlsx": "^0.18.5",
     "file-saver": "^2.0.5"
-
   }
 }
