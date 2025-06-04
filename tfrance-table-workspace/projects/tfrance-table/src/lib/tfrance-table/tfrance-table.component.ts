@@ -1,16 +1,11 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnInit
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Subject, Subscription, debounceTime } from 'rxjs';
 import * as XLSX from 'xlsx';
 
 @Component({
   selector: 'tfrance-table',
   templateUrl: './tfrance-table.component.html',
-  styleUrls: ['./tfrance-table.component.scss']
+  styleUrls: ['./tfrance-table.component.scss'],
 })
 export class TfranceTableComponent implements OnInit {
   @Input() data: any[] = [];
@@ -28,11 +23,12 @@ export class TfranceTableComponent implements OnInit {
 
   get filteredData(): any[] {
     const term = this.searchTerm.toLowerCase();
-    return this.data.filter(item =>
+    return this.data.filter((item) =>
       Object.values(item).some(
-       val => typeof val === 'string' && val.toLowerCase().includes(term)
-     || typeof val === 'number' && val.toString().toLowerCase().includes(term)
-
+        (val) =>
+          (typeof val === 'string' && val.toLowerCase().includes(term)) ||
+          (typeof val === 'number' &&
+            val.toString().toLowerCase().includes(term))
       )
     );
   }
@@ -56,9 +52,33 @@ export class TfranceTableComponent implements OnInit {
     return sorted.slice(start, end);
   }
 
-
   get totalPages(): number {
     return Math.ceil(this.filteredData.length / this.itemsPerPage);
+  }
+
+  goToFirstPage(): void {
+    this.currentPage = 1;
+  }
+
+  goToLastPage(): void {
+    this.currentPage = this.totalPages;
+  }
+
+  toggleSelectAll(event: Event): void {
+    const checked = (event.target as HTMLInputElement).checked;
+    if (checked) {
+      this.paginatedData.forEach((item) => this.selectedItems.add(item));
+    } else {
+      this.paginatedData.forEach((item) => this.selectedItems.delete(item));
+    }
+    this.itemSelected.emit(Array.from(this.selectedItems));
+  }
+
+  isAllSelected(): boolean {
+    return (
+      this.paginatedData.length > 0 &&
+      this.paginatedData.every((item) => this.selectedItems.has(item))
+    );
   }
 
   toggleItem(item: any): void {
@@ -85,17 +105,42 @@ export class TfranceTableComponent implements OnInit {
       this.sortAsc = true;
     }
   }
-goToPreviousPage(): void {
-  if (this.currentPage > 1) {
-    this.currentPage--;
+  goToPreviousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
   }
-}
+  pesquisaPagina$ = new Subject<string>();
+  pesquisaSub: Subscription | null = null;
 
-goToNextPage(): void {
-  if (this.currentPage < this.totalPages) {
-    this.currentPage++;
+  private ignorarDebounce = false;
+
+  onPaginaInput(event: any) {
+    if (!this.pesquisaSub) {
+      this.pesquisaSub = this.pesquisaPagina$
+        .pipe(debounceTime(5000))
+        .subscribe((valor) => {
+          if (!this.ignorarDebounce) {
+            this.goToNextPage(valor);
+          }
+          this.ignorarDebounce = false; // reseta após execução
+        });
+    }
+
+    this.pesquisaPagina$.next(event);
   }
-}
+
+  onPaginaEnter() {
+    this.ignorarDebounce = true;
+    this.goToNextPage(this.currentPage);
+  }
+
+  goToNextPage(pagina?: any): void {
+    const numero = Number(pagina || this.currentPage);
+    if (numero > 0 && numero <= this.totalPages) {
+      this.currentPage = numero;
+    }
+  }
 
   ngOnInit(): void {}
 }
