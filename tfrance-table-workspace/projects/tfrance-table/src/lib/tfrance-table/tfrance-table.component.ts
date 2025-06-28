@@ -1,26 +1,55 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  OnInit,
+  TemplateRef,
+  ElementRef,
+  Renderer2,
+  ViewChild,
+} from '@angular/core';
 import { Subject, Subscription, debounceTime } from 'rxjs';
 import * as XLSX from 'xlsx';
+import { ViewEncapsulation } from '@angular/core';
 
 @Component({
   selector: 'tfrance-table',
   templateUrl: './tfrance-table.component.html',
-  styleUrls: ['./tfrance-table.component.scss'],
+  styleUrls: ['../styles/_table-styles.scss', './tfrance-table.component.scss'],
+  encapsulation: ViewEncapsulation.None,
 })
 export class TfranceTableComponent implements OnInit {
   @Input() data: any[] = [];
-  @Input() columns: { field: string; label: string; sortable?: boolean }[] = [];
   @Input() enableCheckbox = false;
+  @Input() enableCheckboxAll = false;
   @Input() itemsPerPage = 10;
+  @Input() rowTemplate?: TemplateRef<any>;
+  @Input() checkboxClass: string = 'tfr-checkbox';
+  @Input() columns: { field: string; label: string; sortable?: boolean }[] = [];
+  @Input() headerTemplate?: TemplateRef<any>;
+  @Input() enableSorting: boolean = true;
+  @Input() exportarExcel: boolean = true;
+  @Input() enablesearching: boolean = true;
+  @Input() noSortingForColumns: string[] = [];
+  @ViewChild('theadContainer', { read: ElementRef })
+  theadContainer!: ElementRef;
+  @Input() detailTemplate?: TemplateRef<any>;
+  @Input() enabledetail: boolean = false;
 
-  @Output() itemSelected = new EventEmitter<any[]>();
-
+  @Output() itemSelected = new EventEmitter<any>();
+  hasInitializedHeader = false;
   searchTerm = '';
   currentPage = 1;
   sortField: string = '';
   sortAsc = true;
   selectedItems: Set<any> = new Set();
-
+  expandedRows = new Set<number>();
+  @ViewChild('theadContainer', { static: false })
+  theadRef!: ElementRef;
+  observer: MutationObserver | null = null;
+  pagesToShow: number[] = [];
+  constructor(private renderer: Renderer2, private elRef: ElementRef) {}
   get filteredData(): any[] {
     const term = this.searchTerm.toLowerCase();
     return this.data.filter((item) =>
@@ -31,6 +60,115 @@ export class TfranceTableComponent implements OnInit {
             val.toString().toLowerCase().includes(term))
       )
     );
+  }
+
+  ngAfterViewInit(): void {
+    setTimeout(() => this.setupCustomSorting());
+    setTimeout(() => this.autoAlignCells(), 0);
+    const table = this.elRef.nativeElement.querySelector('table');
+    if (!table) return;
+    if (typeof MutationObserver !== 'undefined') {
+      this.observer = new MutationObserver(() => this.autoAlignCells());
+      this.observer.observe(table, { childList: true, subtree: true });
+      this.autoAlignCells();
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.observer?.disconnect();
+  }
+
+  private autoAlignCells() {
+    const table = this.elRef.nativeElement.querySelector('table');
+    if (!table) return;
+
+    const cells: NodeListOf<HTMLTableCellElement> =
+      table.querySelectorAll('th, td');
+
+    cells.forEach((cell) => {
+      cell.style.setProperty('text-align', 'start');
+    });
+  }
+
+  setupCustomSorting(): void {
+    if (!this.enableSorting || !this.theadRef) return;
+
+    const ths = this.theadRef.nativeElement.querySelectorAll('th');
+
+    ths.forEach((th: HTMLElement, index: number) => {
+      if (this.enableCheckbox && index === 0) return;
+
+      const field = th.dataset['field'];
+      if (!field) return;
+
+      this.renderer.setStyle(th, 'cursor', 'pointer');
+
+      this.renderer.listen(th, 'click', () => {
+        this.sortBy(field);
+        this.updateSortIcons();
+      });
+    });
+
+    this.updateSortIcons();
+  }
+
+  updateSortIcons(): void {
+    const ths = this.theadRef.nativeElement.querySelectorAll('th');
+
+    ths.forEach((th: HTMLElement) => {
+      const field = th.dataset['field'];
+      if (!field) return;
+
+      // Remove ícones anteriores
+      const oldIcon = th.querySelector('.feather');
+      if (oldIcon) this.renderer.removeChild(th, oldIcon);
+
+      // Adiciona o ícone correto se for o campo ordenado
+      if (this.sortField === field) {
+        const icon = this.renderer.createElement('i');
+        this.renderer.addClass(icon, 'feather');
+        this.renderer.addClass(
+          icon,
+          this.sortAsc ? 'icon-arrow-down' : 'icon-arrow-up'
+        );
+        this.renderer.setStyle(icon, 'margin-left', '5px');
+        this.renderer.appendChild(th, icon);
+      }
+    });
+  }
+
+  toggleExpand(index: number): void {
+    if (this.expandedRows.has(index)) {
+      this.expandedRows.delete(index);
+    } else {
+      this.expandedRows.add(index);
+    }
+  }
+
+  updatePagesToShow() {
+    const maxPages = 5;
+    const pages: number[] = [];
+
+    const start = Math.max(1, this.currentPage - 2);
+    const end = Math.min(this.totalPages, start + maxPages - 1);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    this.pagesToShow = pages;
+  }
+
+  goToPage(page: number) {
+    this.currentPage = page;
+    this.updatePagesToShow();
+  }
+
+  onGoToPage(value: any) {
+    const page = Number(value);
+    if (!isNaN(page) && page >= 1 && page <= this.totalPages) {
+      this.goToPage(page);
+    }
   }
 
   get paginatedData(): any[] {
@@ -56,6 +194,10 @@ export class TfranceTableComponent implements OnInit {
     return Math.ceil(this.filteredData.length / this.itemsPerPage);
   }
 
+  get TotalRegistros(): number {
+    return this.filteredData.length;
+  }
+
   goToFirstPage(): void {
     this.currentPage = 1;
   }
@@ -64,21 +206,25 @@ export class TfranceTableComponent implements OnInit {
     this.currentPage = this.totalPages;
   }
 
-  toggleSelectAll(event: Event): void {
-    const checked = (event.target as HTMLInputElement).checked;
-    if (checked) {
-      this.paginatedData.forEach((item) => this.selectedItems.add(item));
+  toggleSelectAll(event: any) {
+    const isChecked = event.target.checked;
+
+    if (isChecked) {
+      // Selecionar todos da lista original
+      this.data.forEach((item) => this.selectedItems.add(item));
     } else {
-      this.paginatedData.forEach((item) => this.selectedItems.delete(item));
+      this.data.forEach((item) => this.selectedItems.delete(item));
     }
-    this.itemSelected.emit(Array.from(this.selectedItems));
+
+    this.emitSelection(); // dispara o itemSelected
   }
 
   isAllSelected(): boolean {
-    return (
-      this.paginatedData.length > 0 &&
-      this.paginatedData.every((item) => this.selectedItems.has(item))
-    );
+    return this.data.every((item) => this.selectedItems.has(item));
+  }
+
+  emitSelection() {
+    this.itemSelected.emit(Array.from(this.selectedItems));
   }
 
   toggleItem(item: any): void {
@@ -136,10 +282,20 @@ export class TfranceTableComponent implements OnInit {
   }
 
   goToNextPage(pagina?: any): void {
-    const numero = Number(pagina || this.currentPage);
+    const numero = Number(pagina || this.currentPage++);
     if (numero > 0 && numero <= this.totalPages) {
       this.currentPage = numero;
     }
+  }
+
+  itemsPerPageOptions: number[] = [10, 20, 30, 50, 100, 200, 500, 1000];
+
+  onItemsPerPageChange() {
+    this.currentPage = 1;
+  }
+
+  isNumeric(value: any): boolean {
+    return !isNaN(parseFloat(value)) && isFinite(value);
   }
 
   ngOnInit(): void {}

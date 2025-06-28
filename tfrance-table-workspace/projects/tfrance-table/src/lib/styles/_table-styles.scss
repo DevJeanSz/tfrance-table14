@@ -1,0 +1,50 @@
+.input-pagina {
+  background-color: #FFF;
+  border-radius: 6px;
+  outline: none;
+  width: 25px;
+  height: 20px;
+  text-align: center;
+}
+
+thead,
+tbody,
+tfoot,
+tr,
+td,
+th {
+  border-color: inherit;
+  border-bottom: 1px solid #e9ecef;
+  border-top: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-width: 0;
+}
+
+th {
+  font-size: 10px ;
+  font-style: normal;
+  text-transform: none !important;
+}
+
+td {
+  font-size: 12px;
+}
+
+.align-end {
+  text-align: end !important;
+}
+
+
+th,
+td {
+  white-space: nowrap;
+  padding: 8px !important;
+  text-align: center !important;
+}
+
+th.sortable::after {
+  content: ' ⇅';
+  font-size: 12px;
+  opacity: 0.6;
+}

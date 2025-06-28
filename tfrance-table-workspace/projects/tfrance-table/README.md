@@ -1,78 +1,111 @@
-# TfranceTable
+🇧🇷 TFrance Table
+Uma tabela Angular reutilizável, poderosa e sem frescura, feita para eliminar boilerplate, trazer ordenação nativa, paginação, checkbox de seleção, busca, exportação para Excel e suporte a headerTemplate customizado — tudo sem dor de cabeça.
 
-This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 14.2.0.
+🚀 Funcionalidades
+Funcionalidade	Descrição
+✅ Ordenação automática	Clique no <th> e o componente ordena a coluna
+✅ Paginação	Controle total da quantidade por página
+✅ Busca global	Campo de pesquisa para filtrar todos os dados
+✅ Checkbox opcional	Marque/Desmarque todos ou apenas alguns itens com suporte a seleção em massa
+✅ Exportação para Excel	Gera um .xlsx com os dados exibidos
+✅ Template de cabeçalho	Totalmente customizável com suporte a ng-template
+✅ Ícones automáticos	Ícones de ordenação são inseridos dinamicamente no <th>
+✅ Colunas dinâmicas	Defina um array de colunas ou use ng-template
 
-## Code scaffolding
+📦 Instalação
+bash
+Copiar
+Editar
 
-Run `ng generate component component-name --project tfrance-table` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module --project tfrance-table`.
-> Note: Don't forget to add `--project tfrance-table` or else it will be added to the default project in your `angular.json` file. 
 
-## Build
-
-Run `ng build tfrance-table` to build the project. The build artifacts will be stored in the `dist/` directory.
-
-## Publishing
-
-After building your library with `ng build tfrance-table`, go to the dist folder `cd dist/tfrance-table` and run `npm publish`.
-
-## Running unit tests
-
-Run `ng test tfrance-table` to execute the unit tests via [Karma](https://karma-runner.github.io).
-
-## Further help
-
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
-
-## 🚀 Como usar | How to Use
-1. Importe o módulo no seu app | Import the module into your app
+🧠 Como usar
+1. Com colunas automáticas (via columns)
+html
+Copiar
+Editar
+<tfrance-table
+  [data]="dados"
+  [columns]="colunas"
+  [enableCheckbox]="true"
+  [enableSorting]="true"
+  [enableSearch]="true"
+  [enablePagination]="true"
+  [enabledetail]="false" //desativar a coluna de detalhes por linha
+>
+</tfrance-table>
 ts
 Copiar
 Editar
-import { TfranceTableModule } from 'tfrance-table';
+// No component.ts
+colunas = [
+  { field: 'id', label: 'ID' },
+  { field: 'nome', label: 'Nome' },
+  { field: 'email', label: 'E-mail', sortable: false }, // desativa sorting se quiser
+];
+2. Com <ng-template> no cabeçalho (header customizado)
+html
+Copiar
+Editar
+<ng-template #headerTemplate>
+  <th data-field="id">ID</th>
+  <th data-field="nome">Nome</th>
+  <th data-field="email">E-mail</th>
+</ng-template>
 
-@NgModule({
-  imports: [TfranceTableModule],
-})
-export class AppModule {}
-
-## Exemplo de uso | Usage Example
-2. <tfrance-table
-  [data]="meusDados"
-  [columns]="[
-    { field: 'id', label: 'ID', sortable: true },
-    { field: 'nome', label: 'Nome', sortable: true },
-    { field: 'email', label: 'Email' }
-  ]"
+<tfrance-table
+  [data]="dados"
   [enableCheckbox]="true"
-  [itemsPerPage]="5"
-  (itemSelected)="receberSelecionados($event)"
+  [enableSorting]="true"
+  [headerTemplate]="headerTemplate"
 >
 </tfrance-table>
+🧩 Basta colocar data-field="..." no <th> e o componente cuida do clique e do ícone de ordenação automaticamente.
 
-3. Dados esperados | Expected Input
-✅ data: any[]
-Array de objetos com os dados da tabela.
-Object array with table data.
+🔧 Inputs disponíveis
+Input	Tipo	Descrição
+data	any[]	Dados da tabela
+columns	Column[]	(Opcional) Array com campos e labels
+enableCheckbox	boolean	Ativa coluna com checkboxes
+enableSorting	boolean	Ativa ordenação por coluna
+enableSearch	boolean	Ativa campo de busca global
+enablePagination	boolean	Ativa paginação automática
+headerTemplate	TemplateRef	Template customizado do cabeçalho (usa data-field nos <th>)
 
-✅ columns: { field: string; label: string; sortable?: boolean }[]
-Define quais colunas serão exibidas, seus rótulos e se são ordenáveis.
-Defines which columns will be shown, their labels, and whether they are sortable.
+🎯 Eventos
+Output	Descrição
+rowClicked	Dispara ao clicar em uma linha
+selectionChanged	Dispara ao selecionar/desmarcar itens
+exported	Dispara após exportar para Excel
 
-✅ enableCheckbox: boolean
-Mostra ou oculta checkboxes por linha.
-Shows or hides checkboxes per row.
+📁 Exemplo completo
+html
+Copiar
+Editar
+<tfrance-table
+  [data]="usuarios"
+  [columns]="[
+    { field: 'nome', label: 'Nome' },
+    { field: 'idade', label: 'Idade' },
+    { field: 'email', label: 'E-mail' }
+  ]"
+  [enableCheckbox]="true"
+  [enableSearch]="true"
+  [enableSorting]="true"
+  [enablePagination]="true"
+  [enabledetail]="false"
+/>
 
-✅ itemsPerPage: number
-Define o número de itens por página.
-Sets the number of items per page.
 
-✅ itemSelected: EventEmitter<any[]>
-Evento emitido sempre que um item é (des)selecionado.
-Event emitted when an item is selected or deselected.
+🛠 Roadmap futuro
+ Suporte a ordenação multi-coluna
 
-📤 Exportar para Excel | Export to Excel
-O botão “Exportar Excel” exporta os dados filtrados em formato .xlsx.
-The “Export Excel” button exports filtered data to .xlsx format.
+ Coluna de ações com templates
+
+ Filtros por coluna
+
+ Tradução para múltiplos idiomas
+
+ Estilo dark mode / tema customizado
 
 
 
