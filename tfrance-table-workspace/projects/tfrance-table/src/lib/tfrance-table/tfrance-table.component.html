@@ -16,6 +16,7 @@
         class="form-select w-15"
         [(ngModel)]="itemsPerPage"
         (ngModelChange)="onItemsPerPageChange()"
+        [disabled]="!enablePagination"
       >
         <option *ngFor="let opt of itemsPerPageOptions" [value]="opt">
           {{ opt }}
@@ -161,6 +162,7 @@
   </ng-template>
   <div
     class="tfr-pagination d-flex justify-content-between align-items-center p-2 mt-2"
+    *ngIf="enablePagination"
   >
     <!-- Info de paginação -->
     <div>

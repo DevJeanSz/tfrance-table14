@@ -36,6 +36,7 @@ export class TfranceTableComponent implements OnInit {
   theadContainer!: ElementRef;
   @Input() detailTemplate?: TemplateRef<any>;
   @Input() enabledetail: boolean = false;
+  @Input() enablePagination: boolean = true;
 
   @Output() itemSelected = new EventEmitter<any>();
   hasInitializedHeader = false;
@@ -172,8 +173,6 @@ export class TfranceTableComponent implements OnInit {
   }
 
   get paginatedData(): any[] {
-    const start = (this.currentPage - 1) * this.itemsPerPage;
-    const end = start + this.itemsPerPage;
     let sorted = [...this.filteredData];
 
     if (this.sortField) {
@@ -187,10 +186,18 @@ export class TfranceTableComponent implements OnInit {
       });
     }
 
+    if (!this.enablePagination) {
+      return sorted;
+    }
+
+    const start = (this.currentPage - 1) * this.itemsPerPage;
+    const end = start + this.itemsPerPage;
+
     return sorted.slice(start, end);
   }
 
   get totalPages(): number {
+    if (!this.enablePagination) return 1;
     return Math.ceil(this.filteredData.length / this.itemsPerPage);
   }
 
