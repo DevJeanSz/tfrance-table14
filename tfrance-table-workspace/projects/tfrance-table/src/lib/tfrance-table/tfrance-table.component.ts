@@ -177,12 +177,25 @@ export class TfranceTableComponent implements OnInit {
 
     if (this.sortField) {
       sorted.sort((a, b) => {
-        const aVal = a[this.sortField];
-        const bVal = b[this.sortField];
+        let aVal = a[this.sortField];
+        let bVal = b[this.sortField];
 
-        if (aVal < bVal) return this.sortAsc ? -1 : 1;
-        if (aVal > bVal) return this.sortAsc ? 1 : -1;
-        return 0;
+        // Trata valores nulos ou indefinidos
+        if (aVal == null) aVal = '';
+        if (bVal == null) bVal = '';
+
+        let result = 0;
+
+        if (typeof aVal === 'number' && typeof bVal === 'number') {
+          result = aVal - bVal;
+        } else {
+          result = String(aVal).localeCompare(String(bVal), undefined, {
+            numeric: true,
+            sensitivity: 'base'
+          });
+        }
+
+        return this.sortAsc ? result : -result;
       });
     }
 
